@@ -35,8 +35,7 @@ jspm_packages/
 # Nuxt.js
 .nuxt/
 
-.cache/
-public/
+
 
 # Storybook
 .out/

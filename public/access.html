@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Recognition Access Control</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="styles.css" rel="stylesheet">
+    <style>
+        #logToggleBtn {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            width: 50px;
+            height: 50px; 
+            background-color: #007bff;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 6px rgba(0, 123, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            border: none;
+            transition: all 0.3s ease;
+        }
+
+        #logToggleBtn:hover {
+            transform: scale(1.1);
+            background-color: #0056b3;
+        }
+
+        #logContainer {
+            position: fixed;
+            bottom: 80px;
+            left: 20px;
+            width: 600px;
+            height: 400px;
+            background-color: #1e1e1e;
+            color: #00ff00;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            padding: 15px;
+            overflow-y: auto;
+            border-radius: 6px;
+            box-shadow: 0 0 15px rgba(0,0,0,0.9);
+            z-index: 9999;
+            white-space: pre-wrap;
+            user-select: text;
+            display: none;
+        }
+
+        .logEntry {
+            margin-bottom: 8px;
+            padding: 8px;
+            border-left: 3px solid #00ff00;
+            background-color: rgba(0, 255, 0, 0.1);
+        }
+
+        .logEntry.success {
+            border-left-color: #00ff00;
+            color: #00ff00;
+        }
+
+        .logEntry.error {
+            border-left-color: #ff0000;
+            color: #ff0000;
+        }
+
+        .logEntry.warning {
+            border-left-color: #ffff00;
+            color: #ffff00;
+        }
+
+        .logTimestamp {
+            color: #888;
+            margin-right: 10px;
+        }
+
+        #paginationControls {
+            position: fixed;
+            bottom: 40px;
+            left: 20px;
+            width: 600px;
+            display: none;
+            justify-content: center;
+            gap: 10px;
+            padding: 10px;
+            background-color: #1e1e1e;
+            border-radius: 0 0 6px 6px;
+            z-index: 9999;
+        }
+
+        .pageBtn {
+            background-color: #333;
+            color: #00ff00;
+            border: 1px solid #00ff00;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .pageBtn:hover {
+            background-color: #444;
+        }
+
+        .pageBtn.active {
+            background-color: #00ff00;
+            color: #000;
+        }
+    </style>
+    <!-- Load face-api.js from local files -->
+    <script src="js/face-api.js"></script>
+</head>
+<body>
+    <div class="container mt-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h3 class="mb-0">Face Recognition Access</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-header">
+                                        <h5 class="mb-0">Face Detection</h5>
+                                    </div>
+                                    <div class="card-body">
+                                        <div class="video-container" style="position: relative; width: 640px; height: 480px;">
+                                            <video id="video" width="640" height="480" autoplay muted playsinline></video>
+                                            <canvas id="canvas" style="display: none;" width="640" height="480"></canvas>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-primary" id="startBtn">Start Detection</button>
+                                            <button type="button" class="btn btn-danger" id="stopBtn" style="display: none;">Stop Detection</button>
+                                        </div>
+                                        <div class="mt-3">
+                                            <button type="button" class="btn btn-info" id="faceDetectedBtn" disabled>Face Detected</button>
+                                            <button type="button" class="btn btn-warning" id="statusAccessBtn" disabled>Status Access</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Terminal-style log display -->
+    <button id="logToggleBtn" title="Toggle Logs">
+        <i class="fas fa-terminal" style="color: white; font-size: 24px;"></i>
+    </button>
+    <div id="logContainer"></div>
+    <div id="paginationControls"></div>
+
+    <!-- Modal for displaying detected face -->
+    <div class="modal fade" id="detectedFaceModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detected Face</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <img id="detectedFaceImage" class="img-fluid" alt="Detected Face">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for user details -->
+    <div class="modal fade" id="userDetailsModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">User Details</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="userDetailsContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
+    <script src="access.js"></script>
+</body>
+</html> 
