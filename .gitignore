@@ -35,7 +35,6 @@ jspm_packages/
 # Nuxt.js
 .nuxt/
 
-# Gatsby
 .cache/
 public/
 
